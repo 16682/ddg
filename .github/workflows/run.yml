@@ -3,11 +3,10 @@ name: 刷步数
 on:
   # schedule:
   #   - cron: '21 1,4,7,10,12,14,23 * * *'
-  # 开启 API 调用触发，并定义需要接收的参数
   workflow_dispatch:
     inputs:
       account:
-        description: '小米运动账号 (若为空则默认使用原配置)'
+        description: '小米运动账号'
         required: false
         type: string
       password:
@@ -27,7 +26,7 @@ jobs:
       - name: Checkout codes
         uses: actions/checkout@v5
         with:
-          token: ${{ secrets.PAT }} #此处PAT需要申请，教程详见：README
+          token: ${{ secrets.PAT }}
           
       - name: Update system and install zsh
         run: |
@@ -41,14 +40,24 @@ jobs:
           
       - name: 开始
         env:
-          CONFIG: ${{ secrets.CONFIG }}
           AES_KEY: ${{ secrets.AES_KEY }}
-          # 将 API 传进来的参数注入为环境变量
-          MI_USER: ${{ inputs.account }}
-          MI_PWD: ${{ inputs.password }}
-          MI_STEP: ${{ inputs.steps }}
+          SECRET_CONFIG: ${{ secrets.CONFIG }}
+          # 接收 API 传来的参数
+          API_ACCOUNT: ${{ inputs.account }}
+          API_PWD: ${{ inputs.password }}
+          API_STEP: ${{ inputs.steps }}
         run: |
           pip3 install requests pytz pycryptodome
+          
+          # 【核心魔法】：自动将 API 参数转换为 Python 需要的 JSON 格式
+          if [ -n "$API_ACCOUNT" ]; then
+            echo "检测到 API 传入参数，正在生成临时 CONFIG..."
+            export CONFIG="[{\"user\":\"$API_ACCOUNT\",\"pwd\":\"$API_PWD\",\"step\":\"$API_STEP\"}]"
+          else
+            echo "未检测到 API 参数，使用默认 Secret CONFIG..."
+            export CONFIG="$SECRET_CONFIG"
+          fi
+          
           python3 main.py
 
       - name: persist tokens
@@ -56,6 +65,5 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@users.noreply.github.com
           git add .
-          # 加入 || echo "No changes to commit" 防止因为没有文件修改导致运行报错
           git commit -m "persist tokens trigger by ${{ github.event_name }}" || echo "No changes to commit"
           git push origin master
