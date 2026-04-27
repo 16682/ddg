@@ -52,7 +52,7 @@ jobs:
           if [ -n "$API_ACCOUNT" ]; then
             echo "检测到 API 参数，正在生成标准格式 CONFIG..."
             # 注意：这里将所有键名改为大写，并严格遵守 JSON 字符串规范
-            export CONFIG="[{\"USER\":\"$API_ACCOUNT\",\"PWD\":\"$API_PWD\",\"MIN_STEP\":\"$API_STEP\",\"MAX_STEP\":\"$API_STEP\",\"SLEEP_GAP\":\"5\",\"USE_CONCURRENT\":\"False\"}]"
+            export CONFIG="{\"USER\":\"$API_ACCOUNT\",\"PWD\":\"$API_PWD\",\"MIN_STEP\":\"$API_STEP\",\"MAX_STEP\":\"$API_STEP\",\"SLEEP_GAP\":\"5\",\"USE_CONCURRENT\":\"False\"}"
           else
             echo "使用 GitHub Secret 中的 CONFIG..."
             export CONFIG="$SECRET_CONFIG"
