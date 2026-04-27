@@ -175,15 +175,39 @@ class MiMotionRunner:
         return app_token
 
     # 主函数
+    # def login_and_post_step(self, min_step, max_step):
+    #     if self.invalid:
+    #         return "账号或密码配置有误", False
+    #     app_token = self.login()
+    #     if app_token is None:
+    #         return "登陆失败！", False
+
+    #     step = str(random.randint(min_step, max_step))
+    #     self.log_str += f"已设置为随机步数范围({min_step}~{max_step}) 随机值:{step}\n"
+    #     ok, msg = zeppHelper.post_fake_brand_data(step, app_token, self.user_id)
+    #     return f"修改步数（{step}）[" + msg + "]", ok
+    # 主函数
     def login_and_post_step(self, min_step, max_step):
+        # ====== 新增：API 强行覆写逻辑，无视时间打折 ======
+        import os
+        import json
+        try:
+            raw_config = json.loads(os.environ.get("CONFIG"))
+            # 强制将步数重置为您 API 传进来的原始值
+            min_step = int(raw_config.get("MIN_STEP", min_step))
+            max_step = int(raw_config.get("MAX_STEP", max_step))
+        except Exception:
+            pass
+        # ==================================================
+
         if self.invalid:
             return "账号或密码配置有误", False
         app_token = self.login()
         if app_token is None:
-            return "登陆失败！", False
-
+            return "登录失败", False
+            
         step = str(random.randint(min_step, max_step))
-        self.log_str += f"已设置为随机步数范围({min_step}~{max_step}) 随机值:{step}\n"
+        self.log_str += f"已设置为强制步数范围({min_step}~{max_step}) 最终提交值:{step}\n"
         ok, msg = zeppHelper.post_fake_brand_data(step, app_token, self.user_id)
         return f"修改步数（{step}）[" + msg + "]", ok
 
